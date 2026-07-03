@@ -3,6 +3,11 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using myshop.DataAccess;
 using myshop.Entities.Models;
+using myshop.DataAccess.Repositories;
+using myshop.DataAccess.Repositories.IRepositories;
+using myshop.Business.Services;
+using myshop.Business.Services.IServices;
+using myshop.Business.Mapping;
 using Stripe;
 using System;
 
@@ -14,6 +19,11 @@ builder.Services.AddRazorPages().AddRazorRuntimeCompilation();
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(
     builder.Configuration.GetConnectionString("DefaultConnection")
     )) ;
+
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddAutoMapper(typeof(MappingProfile));
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IProductService, myshop.Business.Services.ProductService>();
 
 builder.Services.AddIdentity<ApplicationUser,IdentityRole>(
     options=>options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromDays(4)
