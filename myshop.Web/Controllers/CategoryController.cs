@@ -1,92 +1,97 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using myshop.DataAccess;
-using myshop.Entities.Models;
+using Microsoft.AspNetCore.Mvc;
+using myshop.Business.DTOs;
+using myshop.Business.Services.IServices;
 
 namespace myshop.Web.Areas.Admin.Controllers
 {
     public class CategoryController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ICategoryService _categoryService;
 
-        public CategoryController(ApplicationDbContext context)
+        public CategoryController(ICategoryService categoryService)
         {
-            _context = context;
+            _categoryService = categoryService;
         }
 
         public IActionResult Index()
         {
-            var categories = _context.Categories.ToList();
+            var categories = _categoryService.GetAllCategories();
             return View(categories);
         }
 
         [HttpGet]
         public IActionResult Create()
         {
-
             return View();
         }
 
         [HttpPost]
-        public IActionResult Create(Category category)
+        public IActionResult Create(CategoryDto categoryDto)
         {
             if (ModelState.IsValid)
             {
-                _context.Categories.Add(category);
-                _context.SaveChanges();
+                _categoryService.CreateCategory(categoryDto);
                 TempData["Create"] = "Item has Created Successfully";
                 return RedirectToAction("Index");
             }
-            return View(category);
+            return View(categoryDto);
         }
 
         [HttpGet]
         public IActionResult Edit(int? id)
         {
-            if (id == null | id == 0)
+            if (id == null || id == 0)
             {
-                NotFound();
+                return NotFound();
             }
-            var categoryIndb = _context.Categories.Find(id);
-
-            return View(categoryIndb);
+            var categoryDto = _categoryService.GetCategoryById(id.Value);
+            if (categoryDto == null)
+            {
+                return NotFound();
+            }
+            return View(categoryDto);
         }
 
         [HttpPost]
-        public IActionResult Edit(Category category)
+        public IActionResult Edit(CategoryDto categoryDto)
         {
             if (ModelState.IsValid)
             {
-                _context.Categories.Update(category);
-
-                _context.SaveChanges();
+                _categoryService.UpdateCategory(categoryDto);
                 TempData["Update"] = "Data has Updated Successfully";
                 return RedirectToAction("Index");
             }
-            return View(category);
+            return View(categoryDto);
         }
 
         [HttpGet]
         public IActionResult Delete(int? id)
         {
-            if (id == null | id == 0)
+            if (id == null || id == 0)
             {
-                NotFound();
+                return NotFound();
             }
-            var categoryIndb = _context.Categories.Where(x => x.Id == id).FirstOrDefault();
-
-            return View(categoryIndb);
+            var categoryDto = _categoryService.GetCategoryById(id.Value);
+            if (categoryDto == null)
+            {
+                return NotFound();
+            }
+            return View(categoryDto);
         }
 
         [HttpPost]
         public IActionResult DeleteCategory(int? id)
         {
-            var categoryIndb = _context.Categories.FirstOrDefault(x => x.Id == id);
-            if (categoryIndb == null)
+            if (id == null || id == 0)
             {
-                NotFound();
+                return NotFound();
             }
-            _context.Categories.Remove(categoryIndb);
-            _context.SaveChanges();
+            var categoryDto = _categoryService.GetCategoryById(id.Value);
+            if (categoryDto == null)
+            {
+                return NotFound();
+            }
+            _categoryService.DeleteCategory(id.Value);
             TempData["Delete"] = "Item has Deleted Successfully";
             return RedirectToAction("Index");
         }
