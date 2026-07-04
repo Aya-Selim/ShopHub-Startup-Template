@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using myshop.Business.DTOs;
 using myshop.Business.Services.IServices;
 
 namespace myshop.Web.Areas.Admin.Controllers
 {
+    [Authorize(Policy = "AdminOnly")]
     public class CategoryController : Controller
     {
         private readonly ICategoryService _categoryService;

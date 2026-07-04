@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -14,5 +14,6 @@ namespace myshop.Entities.Models
         public string Name { get; set; }
         public string Address { get; set; }
         public string City { get; set; }
+        public string? FullName { get; set; }
     }
 }
