@@ -1,21 +1,28 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Hosting;
-using myshop.DataAccess;
-using myshop.Entities.Models;
+using myshop.Business.DTOs;
+using myshop.Business.Services.IServices;
 using myshop.Entities.ViewModels;
+using System;
+using System.IO;
+using System.Linq;
 
 namespace myshop.Web.Areas.Admin.Controllers
 {
+    [Authorize(Policy = "AdminOnly")]
     public class ProductController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IProductService _productService;
+        private readonly ICategoryService _categoryService;
         private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public ProductController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment)
+        public ProductController(IProductService productService, ICategoryService categoryService, IWebHostEnvironment webHostEnvironment)
         {
-            _context = context;
+            _productService = productService;
+            _categoryService = categoryService;
             _webHostEnvironment = webHostEnvironment;
         }
 
@@ -27,15 +34,14 @@ namespace myshop.Web.Areas.Admin.Controllers
         [HttpGet]
         public IActionResult GetData()
         {
-            var products = _context.Products
-                .Include(x => x.Category)
+            var products = _productService.GetAllProducts()
                 .Select(x => new
                 {
                     id = x.Id,
                     name = x.Name,
                     description = x.Description,
                     price = x.Price,
-                    categoryName = x.Category.Name
+                    categoryName = x.CategoryName
                 })
                 .ToList();
 
@@ -47,8 +53,8 @@ namespace myshop.Web.Areas.Admin.Controllers
         {
             ProductVM productVM = new ProductVM()
             {
-                Product = new Product(),
-                CategoryList = _context.Categories.Select(x => new SelectListItem
+                Product = new ProductDto(),
+                CategoryList = _categoryService.GetAllCategories().Select(x => new SelectListItem
                 {
                     Text = x.Name,
                     Value = x.Id.ToString()
@@ -58,7 +64,7 @@ namespace myshop.Web.Areas.Admin.Controllers
         }
 
         [HttpPost]
-        public IActionResult Create(ProductVM productVM,IFormFile file)
+        public IActionResult Create(ProductVM productVM, IFormFile? file)
         {
             if (ModelState.IsValid)
             {
@@ -69,20 +75,31 @@ namespace myshop.Web.Areas.Admin.Controllers
                     var Upload = Path.Combine(RootPath, @"Images\Products");
                     var ext = Path.GetExtension(file.FileName);
 
-                    using (var filestream = new FileStream(Path.Combine(Upload,filename+ext),FileMode.Create))
+                    using (var filestream = new FileStream(Path.Combine(Upload, filename + ext), FileMode.Create))
                     {
                         file.CopyTo(filestream);
                     }
                     productVM.Product.Img = @"Images\Products\" + filename + ext;
                 }
+                else
+                {
+                    // Use a fallback placeholder image to satisfy the non-nullable DB constraint
+                    productVM.Product.Img = @"Images\Products\02a7ea31-1096-4acc-99ad-d708a75c6688.jpg";
+                }
 
-                _context.Products.Add(productVM.Product);
-                _context.SaveChanges();
+                _productService.CreateProduct(productVM.Product);
                 TempData["Create"] = "Item has Created Successfully";
                 return RedirectToAction("Index");
             }
-            return View(productVM.Product);
+
+            productVM.CategoryList = _categoryService.GetAllCategories().Select(x => new SelectListItem
+            {
+                Text = x.Name,
+                Value = x.Id.ToString()
+            });
+            return View(productVM);
         }
+
         [HttpGet]
         public IActionResult Edit(int? id)
         {
@@ -91,10 +108,16 @@ namespace myshop.Web.Areas.Admin.Controllers
                 return NotFound();
             }
 
+            var productDto = _productService.GetProductById(id.Value);
+            if (productDto == null)
+            {
+                return NotFound();
+            }
+
             ProductVM productVM = new ProductVM()
             {
-                Product = _context.Products.FirstOrDefault(x => x.Id == id),
-                CategoryList = _context.Categories.Select(x => new SelectListItem
+                Product = productDto,
+                CategoryList = _categoryService.GetAllCategories().Select(x => new SelectListItem
                 {
                     Text = x.Name,
                     Value = x.Id.ToString()
@@ -103,7 +126,7 @@ namespace myshop.Web.Areas.Admin.Controllers
 
             return View(productVM);
         }
-        
+
         [HttpPost]
         public IActionResult Edit(ProductVM productVM, IFormFile? file)
         {
@@ -135,40 +158,46 @@ namespace myshop.Web.Areas.Admin.Controllers
                     productVM.Product.Img = @"Images\Products\" + filename + ext;
                 }
 
-                _context.Products.Update(productVM.Product);
-                _context.SaveChanges();
-
+                _productService.UpdateProduct(productVM.Product);
                 TempData["Update"] = "Data has Updated Successfully";
                 return RedirectToAction("Index");
             }
 
-            return View(productVM.Product);
+            productVM.CategoryList = _categoryService.GetAllCategories().Select(x => new SelectListItem
+            {
+                Text = x.Name,
+                Value = x.Id.ToString()
+            });
+            return View(productVM);
         }
-        
+
         [HttpDelete]
         public IActionResult Delete(int? id)
         {
-            var productIndb = _context.Products.FirstOrDefault(x => x.Id == id);
-
-            if (productIndb == null)
+            if (id == null || id == 0)
             {
                 return Json(new { success = false, message = "Error while Deleting" });
             }
 
-            _context.Products.Remove(productIndb);
-
-            var oldimg = Path.Combine(_webHostEnvironment.WebRootPath, productIndb.Img.TrimStart('\\'));
-
-            if (System.IO.File.Exists(oldimg))
+            var productDto = _productService.GetProductById(id.Value);
+            if (productDto == null)
             {
-                System.IO.File.Delete(oldimg);
+                return Json(new { success = false, message = "Error while Deleting" });
             }
 
-            _context.SaveChanges();
+            _productService.DeleteProduct(id.Value);
+
+            if (!string.IsNullOrEmpty(productDto.Img))
+            {
+                var oldimg = Path.Combine(_webHostEnvironment.WebRootPath, productDto.Img.TrimStart('\\'));
+
+                if (System.IO.File.Exists(oldimg))
+                {
+                    System.IO.File.Delete(oldimg);
+                }
+            }
 
             return Json(new { success = true, message = "file has been Deleted" });
         }
-
-
     }
 }

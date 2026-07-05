@@ -1,0 +1,78 @@
+@model RegisterVM
+@{
+    ViewData["Title"] = "Register";
+}
+
+<div class="container d-flex justify-content-center align-items-center min-vh-100 py-5">
+    <div class="card border-0 shadow-lg" style="width: 100%; max-width: 550px; border-radius: 20px; overflow: hidden; background: #ffffff;">
+        <div class="text-white text-center py-4" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);">
+            <h3 class="fw-bold mb-0"><i class="fa-solid fa-user-plus me-2"></i>Create Account</h3>
+            <p class="text-white-50 mb-0 mt-1">Get started with myShop today</p>
+        </div>
+        <div class="card-body p-4">
+            <form asp-route-returnUrl="@ViewData["ReturnUrl"]" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+
+                <div class="form-floating mb-3">
+                    <input asp-for="Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" style="border-radius: 12px;" />
+                    <label asp-for="Email">Email Address</label>
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input asp-for="Name" class="form-control" placeholder="Username" aria-required="true" style="border-radius: 12px;" />
+                    <label asp-for="Name">Username / Profile Name</label>
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input asp-for="FullName" class="form-control" placeholder="Full Name" style="border-radius: 12px;" />
+                    <label asp-for="FullName">Full Name (Optional)</label>
+                    <span asp-validation-for="FullName" class="text-danger"></span>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input asp-for="Address" class="form-control" placeholder="Address" aria-required="true" style="border-radius: 12px;" />
+                    <label asp-for="Address">Address</label>
+                    <span asp-validation-for="Address" class="text-danger"></span>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input asp-for="City" class="form-control" placeholder="City" aria-required="true" style="border-radius: 12px;" />
+                    <label asp-for="City">City</label>
+                    <span asp-validation-for="City" class="text-danger"></span>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-floating mb-3">
+                            <input asp-for="Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" style="border-radius: 12px;" />
+                            <label asp-for="Password">Password</label>
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating mb-3">
+                            <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" style="border-radius: 12px;" />
+                            <label asp-for="ConfirmPassword">Confirm Password</label>
+                            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-3 mt-2 fw-bold text-white border-0" style="background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%); border-radius: 12px; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.35);">
+                    Register Now
+                </button>
+            </form>
+
+            <div class="text-center mt-4">
+                <span class="text-muted">Already have an account?</span>
+                <a asp-action="Login" asp-route-returnUrl="@ViewData["ReturnUrl"]" class="fw-bold text-primary ms-1" style="text-decoration: none;">Log In</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
