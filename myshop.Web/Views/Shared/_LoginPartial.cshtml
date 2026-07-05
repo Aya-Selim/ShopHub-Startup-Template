@@ -40,7 +40,7 @@
     {
         <li class="nav-item">
             <span class="nav-link-box">
-                Hello @(UserManager.GetUserAsync(User).Result?.FullName ?? UserManager.GetUserName(User))!
+                Hello @((await UserManager.GetUserAsync(User))?.FullName ?? UserManager.GetUserName(User))!
             </span>
         </li>
         <li class="nav-item">

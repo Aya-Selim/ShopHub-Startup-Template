@@ -26,6 +26,7 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IProductService, myshop.Business.Services.ProductService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddIdentity<ApplicationUser,IdentityRole>(
     options=>options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromDays(4)
@@ -82,12 +83,9 @@ app.UseAuthorization();
 app.UseSession();
 
 app.MapRazorPages();
-//app.MapControllerRoute(
-//    name: "default",
-//    pattern: "{controller=Home}/{action=Index}/{id?}");
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Product}/{action=Index}/{id?}");
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
 

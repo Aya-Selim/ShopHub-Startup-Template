@@ -1,0 +1,270 @@
+@model myshop.Web.ViewModels.UserIndexVM
+
+@{
+    ViewBag.PageTitle = "User Management";
+    ViewBag.CardTitle = "Users List";
+    Layout = "~/Views/Shared/_Dashboard.cshtml";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+<style>
+    .custom-card {
+        background: #ffffff;
+        border-radius: 14px;
+        border: 1px solid #d0d7de;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+        padding: 24px;
+    }
+
+    .custom-card-header {
+        background: #f1f5fb;
+        border-bottom: 1px solid #d0d7de;
+        padding: 16px 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+
+    .table-custom {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 8px;
+    }
+
+    .table-custom th {
+        background-color: #1e40af;
+        color: white;
+        font-weight: 600;
+        padding: 12px;
+    }
+
+    .table-custom td {
+        background-color: #ffffff;
+        padding: 12px;
+        color: #1e3a8a;
+        vertical-align: middle;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .table-custom tr:hover td {
+        background-color: #f0f6ff;
+    }
+
+    .badge-admin {
+        background: linear-gradient(135deg, #dc2626, #991b1b);
+        color: white;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .badge-customer {
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        color: white;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .badge-active {
+        background-color: #16a34a;
+        color: white;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .badge-locked {
+        background-color: #dc2626;
+        color: white;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .btn-action {
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 13px;
+        border: none;
+    }
+</style>
+
+<div class="custom-card">
+    <div class="custom-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h4 class="mb-0 text-primary fw-bold">
+            <i class="fa-solid fa-users me-2"></i> User Management
+        </h4>
+
+        <!-- Search Bar -->
+        <form asp-controller="Users" asp-action="Index" method="get" class="d-flex align-items-center gap-2">
+            <input type="text" name="search" value="@Model.SearchTerm" class="form-control" placeholder="Search by name or email..." style="max-width: 280px; border-radius: 8px;" />
+            <button type="submit" class="btn btn-primary btn-action">
+                <i class="fa-solid fa-magnifying-glass me-1"></i> Search
+            </button>
+            @if (!string.IsNullOrEmpty(Model.SearchTerm))
+            {
+                <a asp-action="Index" class="btn btn-outline-secondary btn-action">Reset</a>
+            }
+        </form>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table-custom">
+            <thead>
+                <tr>
+                    <th>Username / Name</th>
+                    <th>Email</th>
+                    <th>Current Role</th>
+                    <th>Lock Status</th>
+                    <th style="width: 320px;" class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Users != null && Model.Users.Any())
+                {
+                    @foreach (var user in Model.Users)
+                    {
+                        <tr>
+                            <td>
+                                <strong>@(string.IsNullOrEmpty(user.FullName) ? user.UserName : user.FullName)</strong>
+                                @if (user.Id == Model.CurrentUserId)
+                                {
+                                    <span class="badge bg-warning text-dark ms-1">You</span>
+                                }
+                            </td>
+                            <td>@user.Email</td>
+                            <td>
+                                @if (user.Role == "Admin")
+                                {
+                                    <span class="badge-admin"><i class="fa-solid fa-user-shield me-1"></i> Admin</span>
+                                }
+                                else
+                                {
+                                    <span class="badge-customer"><i class="fa-solid fa-user me-1"></i> Customer</span>
+                                }
+                            </td>
+                            <td>
+                                @if (user.IsLocked)
+                                {
+                                    <span class="badge-locked"><i class="fa-solid fa-lock me-1"></i> Locked</span>
+                                }
+                                else
+                                {
+                                    <span class="badge-active"><i class="fa-solid fa-lock-open me-1"></i> Active</span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                @if (user.Id == Model.CurrentUserId)
+                                {
+                                    <span class="text-muted small fw-semibold">Current Account</span>
+                                }
+                                else
+                                {
+                                    <div class="d-flex justify-content-center gap-1">
+                                        <!-- Role Toggle Form -->
+                                        <form asp-controller="Users" asp-action="ChangeRole" method="post" class="d-inline">
+                                            <input type="hidden" name="id" value="@user.Id" />
+                                            @if (user.Role == "Admin")
+                                            {
+                                                <button type="submit" class="btn btn-warning btn-action text-dark" title="Demote to Customer">
+                                                    <i class="fa-solid fa-arrow-down me-1"></i> Demote
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button type="submit" class="btn btn-info btn-action text-white" title="Promote to Admin">
+                                                    <i class="fa-solid fa-arrow-up me-1"></i> Promote
+                                                </button>
+                                            }
+                                        </form>
+
+                                        <!-- Lock/Unlock Form -->
+                                        <form asp-controller="Users" asp-action="ToggleLock" method="post" class="d-inline">
+                                            <input type="hidden" name="id" value="@user.Id" />
+                                            @if (user.IsLocked)
+                                            {
+                                                <button type="submit" class="btn btn-success btn-action" title="Unlock Account">
+                                                    <i class="fa-solid fa-key me-1"></i> Unlock
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button type="submit" class="btn btn-secondary btn-action" title="Lock Account">
+                                                    <i class="fa-solid fa-lock me-1"></i> Lock
+                                                </button>
+                                            }
+                                        </form>
+
+                                        <!-- Delete Form -->
+                                        <form asp-controller="Users" asp-action="Delete" method="post" class="d-inline" onsubmit="return confirmDelete(event, this);">
+                                            <input type="hidden" name="id" value="@user.Id" />
+                                            <button type="submit" class="btn btn-danger btn-action" title="Delete User">
+                                                <i class="fa-solid fa-trash me-1"></i> Delete
+                                            </button>
+                                        </form>
+                                    </div>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">No users found.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    @if (Model.TotalPages > 1)
+    {
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <span class="text-muted small">Showing Page @Model.PageNumber of @Model.TotalPages (Total: @Model.TotalItems Users)</span>
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
+                    <a class="page-link" asp-action="Index" asp-route-page="@(Model.PageNumber - 1)" asp-route-search="@Model.SearchTerm">Previous</a>
+                </li>
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                        <a class="page-link" asp-action="Index" asp-route-page="@i" asp-route-search="@Model.SearchTerm">@i</a>
+                    </li>
+                }
+                <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
+                    <a class="page-link" asp-action="Index" asp-route-page="@(Model.PageNumber + 1)" asp-route-search="@Model.SearchTerm">Next</a>
+                </li>
+            </ul>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function confirmDelete(e, form) {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "This user account will be permanently deleted!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Yes, delete user'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+            return false;
+        }
+    </script>
+}
