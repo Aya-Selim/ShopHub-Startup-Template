@@ -38,10 +38,18 @@ namespace myshop.DataAccess.DbInitializer
             if (!_roleManager.RoleExistsAsync("Admin").GetAwaiter().GetResult())
             {
                 _roleManager.CreateAsync(new IdentityRole("Admin")).GetAwaiter().GetResult();
-                _roleManager.CreateAsync(new IdentityRole("Customer")).GetAwaiter().GetResult();
+            }
 
-                // Seed admin user
-                var adminUser = new ApplicationUser
+            if (!_roleManager.RoleExistsAsync("Customer").GetAwaiter().GetResult())
+            {
+                _roleManager.CreateAsync(new IdentityRole("Customer")).GetAwaiter().GetResult();
+            }
+
+            // Seed admin user if it doesn't exist
+            var adminUser = _userManager.FindByEmailAsync("admin@myshop.com").GetAwaiter().GetResult();
+            if (adminUser == null)
+            {
+                var newAdmin = new ApplicationUser
                 {
                     UserName = "admin@myshop.com",
                     Email = "admin@myshop.com",
@@ -52,10 +60,10 @@ namespace myshop.DataAccess.DbInitializer
                     EmailConfirmed = true
                 };
 
-                var result = _userManager.CreateAsync(adminUser, "Admin123*").GetAwaiter().GetResult();
+                var result = _userManager.CreateAsync(newAdmin, "Admin123*").GetAwaiter().GetResult();
                 if (result.Succeeded)
                 {
-                    _userManager.AddToRoleAsync(adminUser, "Admin").GetAwaiter().GetResult();
+                    _userManager.AddToRoleAsync(newAdmin, "Admin").GetAwaiter().GetResult();
                 }
             }
         }

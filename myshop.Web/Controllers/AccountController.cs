@@ -83,7 +83,14 @@ namespace myshop.Web.Controllers
                     {
                         return Redirect(returnUrl);
                     }
-                    return RedirectToAction("Index", "Product");
+
+                    var user = await _userManager.FindByEmailAsync(model.Email);
+                    if (user != null && await _userManager.IsInRoleAsync(user, "Admin"))
+                    {
+                        return RedirectToAction("Index", "Product");
+                    }
+
+                    return RedirectToAction("Index", "Home");
                 }
 
                 ModelState.AddModelError(string.Empty, "Invalid login attempt.");

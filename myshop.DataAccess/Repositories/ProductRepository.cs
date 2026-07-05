@@ -9,6 +9,7 @@ namespace myshop.DataAccess.Repositories
         public ProductRepository(ApplicationDbContext context) : base(context)
         {
         }
+// if have partial update use this
 
         public void Update(Product product)
         {
